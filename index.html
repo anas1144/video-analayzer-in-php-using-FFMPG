@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport"
+              content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>Analyser</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/fontawesome.min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+              integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        <style type="text/css">
+            pre.out_put {
+                background: #fff;
+                padding: 15px;
+            }
+
+            .cb-upper-bar {
+                margin-left: 0;
+                margin-right: 0;
+            }
+
+            .table-container {
+                margin: 40px 4rem 40px 4rem;
+                padding: 0.5rem 2rem 0 2rem;
+                border: 1px solid #dee2e6;
+                border-radius: 10px;
+            }
+
+            table {
+                margin-bottom: 0 !important;
+            }
+
+            td {
+                border-top: none !important;
+                border-bottom: 1px solid #dee2e6;
+            }
+
+            .file-name {
+                margin-top: 1rem;
+            }
+
+            .alert.alert-warning {
+                padding: 0.2rem 1.25rem;
+                margin-top: 0.5rem;
+                border-radius: 0.5rem;
+                color: #efbf04;
+                font-weight: 500;
+                text-align: center;
+                width: fit-content;
+            }
+
+            .alert.alert-success {
+                padding: 0.2rem 2.25rem;
+                margin-top: 0.5rem;
+                border-radius: 0.5rem;
+                color: #029602;
+                font-weight: 500;
+                text-align: center;
+                width: fit-content;
+            }
+
+            ion-icon {
+                font-size: 30px;
+                margin-top: 0.7rem;
+                color: #dc3545;
+            }
+
+            .progress-label {
+                margin: 0;
+            }
+
+            .progress-bar {
+                background-color: #eeeeee;
+                border-radius: 0.5rem;
+                height: 22px;
+                width: 80%;
+            }
+
+            .progress {
+                background: #f8c704;
+                border-radius: 0.5rem;
+                height: 22px;
+                width: 40%;
+                transition: width 0.5s ease-in;
+            }
+
+            @media screen and (max-width: 900px) {
+                .table-container {
+                    margin: 20px 1rem 20px 1rem;
+                }
+            }
+
+            @media screen and (max-width: 750px) {
+                .table-container {
+                    margin: 20px 0.5rem 20px 0.5rem;
+                    padding: 0;
+                    border: none;
+                    border-radius: 0px;
+                }
+            }
+        </style>
+    </head>
+
+    <body id="home">
+        <div class="row mt-5 cb-upper-bar">
+            <div class="col-md-5 " style="padding-left: 124px;"><label>User</label><select style="width: 200px;height: 40px;"
+                                                                                           onchange="getdata(this.value)" id="selectuser"></select></div>
+            <div class="col-md-6 "><button onclick="orderview()" class="btn btn-primary float-right  mr-5">New
+                    Order</button><button onclick="userview()" class="btn  btn-primary float-right mr-2">New User</button></div>
+        </div>
+        <div class="table-container" id="main_container">
+            <table class="table" id="filesinfo">
+                <tbody id="tablebody"></tbody>
+            </table>
+        </div>
+        <div id="redponce"></div>
+        <!--new order-->
+        <div class="row mt-5" style="display:none;" id="new-order">
+            <div class="col-md-4"></div>
+            <div class="col-md-4">
+                <div>
+                    <h3>New Order</h3>
+                    <span class="float-right mr-2 t-0" onclick="hideorderview()">X</span>
+                </div>
+                <div>
+                    <span class="float-right mr-2 p-2 order_id_view" id="order_id_view"></span>
+                </div>
+                <div class="bg-info p-2 mt-2" style="border-radius: 5px;">
+                    <span id="success_message"></span>
+                    <form action="upload/upload.php" method="post" id="sample_form" enctype="multipart/form-data">
+                        <input type="hidden" id="oid" name="order_id" value="">
+                        <input type="hidden" id="uid" name="user_id" value="">
+                        <input type="hidden" id="foid" name="foid" value="">
+                        <input type="hidden" id="video_ids" name="video_ids" value="">
+                        <div class="form-group">
+                            <label for="media">Video:</label>
+                            <input type="file" id="media" name="media[]" class="form-control"
+                                   accept=".mp4, .avi, .wpv, .mpeg-4, .mov, .avchd, .flv, .f4v, .swf, .mkv, .webm" multiple="multiple">
+                            <span id="media_error" class="text-danger"></span>
+                            <span
+                                style="color: red;text-align: center;display: block;background: #fff;border-radius: 4px;font-size: 13px;padding: 4px;"
+                                id="maxsize"></span>
+                        </div>
+                        <!--            <div class="form-group">
+                            <input type="radio" id="as_ofcom_itc" name="order_fcom" value="as_ofcom_itc" checked> UK/ofcom <input type="radio" id="as_japan_hdr" name="order_fcom" value="as_japan_hdr"> Japanese <span id="order_fcom_error" class="text-danger"></span>
+                          </div>-->
+                        <pre class="out_put"> Metadata will appear here.. </pre>
+                        <div class="form-group mt-3 mb-3 progress" id="process" style="display:none;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" id="progress-bar"
+                                 role="progressbar" aria-valuenow="" aria-valuemin="0" aria-valuemax="100" style="width: 0%"> 0% </div>
+                        </div>
+                        <input type="submit" name="submit" id="save" class="btn btn-block btn-primary" value="Next">
+                    </form>
+
+                </div>
+            </div>
+        </div>
+        <!--new user-->
+        <div class="row mt-5" style="display:none;z-index:9999;" id="new-user">
+            <div class="col-md-4"></div>
+            <div class="col-md-4">
+                <div>
+                    <h3>New User</h3>
+                    <span class="float-right mr-2 t-0" onclick="hideuserview()">X</span>
+                </div>
+                <div class="bg-info p-2 mt-2" style="border-radius: 5px;">
+                    <span id="user_success_message"></span>
+                    <form action="analyser/user.php" method="post" id="user_form">
+                        <div class="form-group">
+                            <label for="fname">User ID:</label>
+                            <input type="number" id="userid" name="user_id" class="form-control">
+                            <span id="userid_error" class="text-danger"></span>
+                        </div>
+                        <input type="submit" name="submit" id="save_user" class="btn btn-block btn-primary" value="Submit">
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+        <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+        <script src="vendor/libs/js/jquery.min.js"></script>
+        <script src="vendor/libs/js/bootstrap.min.js"></script>
+        <script>
+                        ids();
+
+                        // getsingleoreder stutas
+                        function singleordersstutas(id) {
+
+                                $.ajax({
+                                    url: "analyser/checkstatus.php",
+                                    data: {
+                                        order_id: id
+                                    },
+                                    type: "GET",
+                                    dataType: 'JSON',
+                                    success: function (data) {
+//                                        console.log(data);
+                                        
+                                    }
+                                });
+                           
+                        }
+
+                        // getoreder stutas
+                        function ordersstutas() {
+                            var order_ids = $('.order_ids');
+                            //          console.log(order_ids);
+                            order_ids.each(function () {
+                                console.log($(this).val());
+                                $.ajax({
+                                    url: "analyser/checkstatus.php",
+                                    data: {
+                                        order_id: $(this).val()
+                                    },
+                                    type: "GET",
+                                    dataType: 'JSON',
+                                    success: function (data) {
+//                                        console.log(data);
+                                        setTimeout(() => {
+                                            ordersstutas();
+                                        }, 10000);
+                                    }
+                                });
+                            });
+                        }
+                        // get user and order ids
+                        function ids(user_id = '', reload = '') {
+                            $.ajax({
+                                url: "upload/loadcontent.php",
+                                data: {
+                                    type: "ids",
+                                    user_id: user_id
+                                },
+                                type: "POST",
+                                dataType: 'JSON',
+                                success: function (data) {
+                                    //            console.log(data);
+                                    $("#oid").val(data.order_id);
+                                    $("#uid").val(data.user_id);
+                                    $("#foid").val(data.fill_order_id);
+                                    $("#order_id_view").val('#' + data.fill_order_id);
+                                    if (reload == 'not') {
+                                        setTimeout(() => {
+                                            loadusers('not');
+                                        }, 100);
+                                    } else {
+                                        setTimeout(() => {
+                                            loadusers();
+                                        }, 100);
+                                    }
+
+                                }
+                            });
+                        }
+                        // load users
+                        function loadusers(reload = '') {
+                            var user_id = $('#uid').val();
+                            $.ajax({
+                                url: "upload/loadcontent.php",
+                                data: {
+                                    type: "loadusers",
+                                    user_id: user_id
+                                },
+                                type: "GET",
+                                dataType: 'HTML',
+                                success: function (data) {
+                                    //            console.log(data);
+                                    $("#selectuser").html(data);
+                                    if (reload != 'not') {
+                                        setTimeout(() => {
+                                            var user_id = $('#uid').val();
+                                            getdata(user_id);
+                                            maxsize();
+
+                                        }, 200);
+                                    }
+
+                                }
+                            });
+                        }
+                        // files max size
+                        function maxsize() {
+                            $.ajax({
+                                url: "upload/loadcontent.php",
+                                data: {
+                                    type: "maxsize",
+                                },
+                                type: "GET",
+                                dataType: 'HTML',
+                                success: function (data) {
+                                    //            console.log(data);
+                                    $("#maxsize").html(data);
+                                }
+                            });
+                        }
+                        $('#media').on('change', function (event) {
+                            event.preventDefault();
+                            var count_error = 0;
+                            $('#media').hide();
+                            $('#save').hide();
+                            if ($('#uid').val() == '') {
+                                $('#uid_error').text('User ID is required');
+                                count_error++;
+                            } else {
+                                $('#uid_error').text('');
+                            }
+                            if ($('#oid').val() == '') {
+                                $('#oid_error').text('Order ID is required');
+                                count_error++;
+                            } else {
+                                $('#oid_error').text('');
+                            }
+                            if ($('#media').val() == '') {
+                                $('#media_error').text('At least one video is required');
+                                count_error++;
+                            } else {
+                                $('#media_error').text('');
+                            }
+                            var user_id = $('#uid').val();
+                            var order_id = $('#oid').val();
+                            var files = $('#media');
+                            var formdata = new FormData();
+                            files = $('input[type=file]')[0].files;
+                            if ($('#media')[0].files.length > 0) {
+                                for (var i = 0; i < files.length; i++) {
+                                    formdata.append("media[]", files[i], files[i]['name']);
+                                }
+                                formdata.append('file_submit', 1);
+                                formdata.append('user_id', user_id);
+                                formdata.append('order_id', order_id);
+                                var fsize = $('#media')[0].files[0].size;
+                                var ftype = $('#media')[0].files[0].type;
+                                var fname = $('#media')[0].files[0].name;
+                                var fextension = fname.substring(fname.lastIndexOf('.') + 1);
+                                var validExtensions = ["mp4", "avi", "wpv", "mpeg-4", "mov", "avchd", "flv", "f4v", "swf", "mkv", "webm"];
+                                if ($.inArray(fextension, validExtensions) == -1) {
+                                    $('#file_msg').html('<p style="color:red">This type of file is not allowed!</p>');
+                                    return false;
+                                } else {
+                                    //                        if (fsize > 524288000) {
+                                    //                            $('#file_msg').html('
+                                    // < p style = "color:red" > File size too large!Please upload less than 500 MB < /p>');
+                                    //                            return false;
+                                    //                        }
+                                }
+                            }
+                            var form = $('#sample_form').attr('action');
+                            if (count_error == 0) {
+                                $.ajax({
+                                    url: form,
+                                    data: formdata,
+                                    type: "POST",
+                                    dataType: 'JSON',
+                                    contentType: false,
+                                    processData: false,
+                                    xhr: function () {
+                                        $('.process').css('display', 'block');
+                                        var xhr = new window.XMLHttpRequest();
+                                        xhr.upload.addEventListener("progress", function (evet) {
+                                            if (evet.lengthComputable) {
+                                                var percentComplete = Math.round(evet.loaded / evet.total) * 100;
+                                                $('.progress-bar').text(percentComplete + '%');
+                                                $('.progress-bar').css('width', percentComplete + '%');
+                                            }
+                                        }, false);
+                                        return xhr;
+                                    },
+                                    success: function (data) {
+                                        //                      console.log(data);
+                                        $('#success_message').html("<div class='alert alert-success'>Files uploaded successfully.</div>").fadeIn('slow');
+                                        $('#success_message').delay(5000).fadeOut('slow');
+                                        $('#video_ids').val(JSON.stringify(data, undefined, 2));
+                                        $('.out_put').html(JSON.stringify(data, undefined, 2));
+                                        $('#media').show();
+                                        $('#save').show();
+                                        $('.progress').css('display', 'none');
+                                    }
+                                });
+                            } else {
+                                return false;
+                            }
+                        });
+
+                        function remove(collection, key) {
+                            // if the collections is an array
+                            if (collection instanceof Array) {
+                                if (collection.indexOf(key) != -1) {
+                                    collection.splice(collection.indexOf(key), 1);
+                                }
+                            }
+                            // it's an object
+                            else if (collection.hasOwnProperty(key)) {
+                                delete collection[key];
+                            }
+                            return collection;
+                        }
+                        ;
+
+                        function next() {
+                            $('#sample_form_next').on('submit', function (event) {
+                                event.preventDefault();
+                                var url = $(this).attr('action');
+                                var formdata = $(this).serialize();
+                                $.ajax({
+                                    url: url,
+                                    data: formdata,
+                                    type: "POST",
+                                    dataType: 'JSON',
+
+                                    success: function (data) {
+                                        //                    console.log(data);
+                                        location.reload();
+                                    }
+                                });
+                            });
+                        }
+                        $('#user_form').on('submit', function (event) {
+                            event.preventDefault();
+                            var count_error = 0;
+                            if ($('#userid').val() == '') {
+                                $('#userid_error').text('User ID is required');
+                                count_error++;
+                            } else if ($('#userid').val().toString().length > 11) {
+                                $('#userid_error').text('User ID is only 11');
+                                count_error++;
+                            } else {
+                                $('#userid_error').text('');
+                            }
+                            var user_id = $('#userid').val();
+                            var formdata = new FormData();
+                            formdata.append('user_id', user_id);
+                            var form = $(this).attr('action');
+                            if (count_error == 0) {
+                                $.ajax({
+                                    url: form,
+                                    data: formdata,
+                                    type: "POST",
+                                    dataType: 'JSON',
+                                    contentType: false,
+                                    processData: false,
+                                    success: function (data) {
+                                        //                          console.log(data);
+                                        $('#user_success_message').html("<div class= alert alert-success'>" + data.message + "</div>").fadeIn('slow');
+                                        $('#user_success_message').delay(5000).fadeOut('slow');
+                                        $('#sample_form')[0].reset();
+                                    }
+                                });
+                            } else {
+                                return false;
+                            }
+                        });
+                        $('#sample_form').on('submit', function (event) {
+                            event.preventDefault();
+                            var video = JSON.parse($('#video_ids').val());
+                            var user_id = $('#uid').val();
+                            var order_id = $('#oid').val();
+                            var fill_order_id = $('#foid').val();
+                            //                  console.log(typeof video);
+                            var order_fcom = $('#order_fcom').val();
+                            var html = '';
+                            html = html + '<div class="row mt-5" id="new-order-next">';
+                            html = html + '<div class="col-md-4"></div>';
+                            html = html + '<div class="col-md-4"> ';
+                            html = html + '<div>';
+                            html = html + '<h3>New Order</h3>';
+                            html = html + '</div>';
+                            html = html + '<div>';
+                            html = html + '<span class="mr-2 p-2">#' + fill_order_id + '</span>';
+                            html = html + '</div>';
+                            html = html + '<div class="bg-info p-2 mt-2" style="border-radius: 5px;">';
+                            html = html + '<form action="analyser/jobsubmit.php" method="post" id="sample_form_next">';
+
+                            html = html + '<input type="hidden" id="oid" name="order_id" value="' + order_id + '">';
+
+                            html = html + '<input type="hidden" id="uid" name="user_id" value="' + user_id + '">';
+
+
+                            $.each(video, function (index, value) {
+                                html = html + '<label for="fname">' + value['file_name'] + '</label>';
+                                html = html + '<div class="form-group">';
+
+                                html = html + 'Subtitle:<input type="text" placeholder="Subtitle" id="subtitle-' + value['video_id'] + '" name="subtitle-' + value['video_id'] + '" class="form-control">';
+                                html = html + '</div>';
+                                html = html + '<div class="form-group">';
+                                html = html + 'Extra: <input type="text" placeholder="Extra" id="extra-' + value['video_id'] + '" name="extra-' + value['video_id'] + '" class="form-control">';
+                                html = html + '</div>';
+                                html = html + '<div class="form-group">';
+                                html = html + 'Asset No: <input type="text" placeholder="Asset No" id="subtitle-' + value['video_id'] + '" name="assetno-' + value['video_id'] + '" class="form-control">';
+                                html = html + '</div>';
+                                html = html + '<div class="form-group">';
+                                html = html + '<input type="radio" id="as_ofcom_itc-' + value['video_id'] + '" name="order_fcom-' + value['video_id'] + '" value="as_ofcom_itc" checked> UK/ofcom  <input type="radio" id="as_nab2006-' + value['video_id'] + '" name="order_fcom-' + value['video_id'] + '" value="as_nab2006" > Japanese ';
+                                html = html + '</div>';
+                                html = html + '<div class="">';
+                                html = html + '<input type="checkbox" id="Del-FAT-' + value['video_id'] + '" name="Del-FAT-' + value['video_id'] + '" value="1" class=""> Delete file after test?';
+                                html = html + '</div>';
+
+                            });
+
+                            html = html + '<input type="submit" name="submit" id="save_next" class="btn btn-block btn-primary" value="Submit">';
+                            html = html + '</form>';
+                            html = html + '<div class="form-group mt-3 mb-3 progress" id="process_next" style="display:none;">';
+                            html = html + '<div class="progress-bar-next progress-bar-striped progress-bar-animated bg-primary" id="progress-bar-next" role="progressbar" aria-valuenow="" aria-valuemin="0" aria-valuemax="100" style="width: 0%">';
+                            html = html + '0%';
+                            html = html + '</div>';
+                            html = html + '</div>';
+                            html = html + '</div>';
+                            html = html + '</div>';
+                            html = html + '</div>';
+
+                            $('#new-order').hide();
+                            $('#main_container').show();
+                            $('#main_container').html(html);
+
+                            //                  console.log(html);
+                            next();
+                            return false;
+                        });
+
+                        function orderview() {
+                            $('#new-order').show();
+                            $('#new-user').hide();
+                            $('#filesinfo').hide();
+                        }
+
+                        function hideuserview() {
+                            $('#new-user').hide();
+                            $('#new-order').hide();
+                            $('#filesinfo').show();
+                        }
+
+                        function hideorderview() {
+                            $('#new-user').hide();
+                            $('#new-order').hide();
+                            $('#filesinfo').show();
+                        }
+
+                        function userview() {
+                            $('#new-user').show();
+                            $('#new-order').hide();
+                            $('#filesinfo').hide();
+                        }
+
+                        function getdata(el) {
+                            $.ajax({
+                                url: "upload/loadcontent.php",
+                                data: {
+                                    type: "loadtable",
+                                    user_id: el
+                                },
+                                type: "GET",
+                                dataType: 'HTML',
+                                success: function (data) {
+//                                                          console.log(data);
+                                    $("#tablebody").html(data);
+                                    ids(el, 'not');
+
+                                    ordersstutas();
+
+                                }
+                            });
+                        }
+        </script>
+    </body>
+
+</html>
